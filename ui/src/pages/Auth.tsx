@@ -73,7 +73,7 @@ export function AuthPage() {
       <div className="w-full md:w-1/2 flex flex-col overflow-y-auto">
         <div className="w-full max-w-md mx-auto my-auto px-8 py-12">
           <div className="flex items-center gap-2 mb-8">
-            <img src="/logo-cartola.png" style={{ filter: "drop-shadow(0 0 8px rgba(25, 175, 255, 0.4))" }} />
+            <img src="/logo-cartola.png" style={{ maxWidth: "180px", maxHeight: "180px", width: "auto", height: "auto", filter: "drop-shadow(0 0 8px rgba(25, 175, 255, 0.4))" }} />
           </div>
 
           <h1 className="text-xl font-semibold">Cartola Laboratory Co.</h1>
