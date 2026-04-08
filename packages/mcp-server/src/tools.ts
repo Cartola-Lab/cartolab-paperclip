@@ -154,6 +154,19 @@ export function createToolDefinitions(client: PaperclipApiClient): ToolDefinitio
       },
     ),
     makeTool(
+      "paperclipGetAgentRuns",
+      "Get execution runs for a specific agent",
+      z.object({ agentId: z.string().min(1) }),
+      async ({ agentId }) => client.requestJson("GET", `/agents/${encodeURIComponent(agentId)}/runs`),
+    ),
+    makeTool(
+      "paperclipWakeAgent",
+      "Wake an agent to process pending work",
+      z.object({ agentId: z.string().min(1) }),
+      async ({ agentId }) =>
+        client.requestJson("POST", `/agents/${encodeURIComponent(agentId)}/wake`, { body: {} }),
+    ),
+    makeTool(
       "paperclipListIssues",
       "List issues for a company with optional filters",
       listIssuesSchema,
@@ -308,6 +321,22 @@ export function createToolDefinitions(client: PaperclipApiClient): ToolDefinitio
       updateIssueToolSchema,
       async ({ issueId, ...body }) =>
         client.requestJson("PATCH", `/issues/${encodeURIComponent(issueId)}`, { body }),
+    ),
+    makeTool(
+      "paperclipDeleteIssue",
+      "Permanently delete an issue by id",
+      z.object({ issueId: issueIdSchema }),
+      async ({ issueId }) =>
+        client.requestJson("DELETE", `/issues/${encodeURIComponent(issueId)}`),
+    ),
+    makeTool(
+      "paperclipAssignIssue",
+      "Assign an issue to an agent (convenience wrapper over updateIssue)",
+      z.object({ issueId: issueIdSchema, assigneeAgentId: z.string().uuid() }),
+      async ({ issueId, assigneeAgentId }) =>
+        client.requestJson("PATCH", `/issues/${encodeURIComponent(issueId)}`, {
+          body: { assigneeAgentId },
+        }),
     ),
     makeTool(
       "paperclipCheckoutIssue",
