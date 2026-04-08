@@ -26,6 +26,7 @@ COPY packages/plugins/examples/plugin-authoring-smoke-example/package.json packa
 COPY packages/plugins/examples/plugin-file-browser-example/package.json packages/plugins/examples/plugin-file-browser-example/
 COPY packages/plugins/examples/plugin-hello-world-example/package.json packages/plugins/examples/plugin-hello-world-example/
 COPY packages/plugins/examples/plugin-kitchen-sink-example/package.json packages/plugins/examples/plugin-kitchen-sink-example/
+COPY packages/plugins/examples/plugin-studio/package.json packages/plugins/examples/plugin-studio/
 COPY patches/ patches/
 
 RUN pnpm install --frozen-lockfile
@@ -40,6 +41,10 @@ RUN pnpm --filter @paperclipai/ui build
 RUN pnpm --filter @paperclipai/plugin-sdk build
 RUN pnpm --filter @paperclipai/server build
 RUN test -f server/dist/index.js || (echo "ERROR: server build output missing" && exit 1)
+
+# Build plugin-studio with SDK bundled
+RUN pnpm --filter @cartolab/plugin-studio build
+RUN test -f packages/plugins/examples/plugin-studio/dist/worker.js || (echo "ERROR: plugin-studio build output missing" && exit 1)
 
 FROM base AS production
 WORKDIR /app
