@@ -2,7 +2,7 @@ import fs from "node:fs/promises";
 import path from "node:path";
 import { execFile as execFileCallback } from "node:child_process";
 import { promisify } from "node:util";
-import { and, asc, desc, eq, gt, inArray, sql } from "drizzle-orm";
+import { and, asc, desc, eq, gt, inArray, isNull, or, sql } from "drizzle-orm";
 import type { Db } from "@paperclipai/db";
 import type { BillingType, ExecutionWorkspace, ExecutionWorkspaceConfig } from "@paperclipai/shared";
 import {
@@ -696,8 +696,27 @@ export function shouldResetTaskSessionForWake(
   if (contextSnapshot?.forceFreshSession === true) return true;
 
   const wakeReason = readNonEmptyString(contextSnapshot?.wakeReason);
-  if (wakeReason === "issue_assigned") return true;
+  if (
+    wakeReason === "issue_assigned" ||
+    wakeReason === "execution_review_requested" ||
+    wakeReason === "execution_approval_requested" ||
+    wakeReason === "execution_changes_requested"
+  ) {
+    return true;
+  }
   return false;
+}
+
+function shouldRequireIssueCommentForWake(
+  contextSnapshot: Record<string, unknown> | null | undefined,
+) {
+  const wakeReason = readNonEmptyString(contextSnapshot?.wakeReason);
+  return (
+    wakeReason === "issue_assigned" ||
+    wakeReason === "execution_review_requested" ||
+    wakeReason === "execution_approval_requested" ||
+    wakeReason === "execution_changes_requested"
+  );
 }
 
 export function formatRuntimeWorkspaceWarningLog(warning: string) {
@@ -714,6 +733,9 @@ function describeSessionResetReason(
 
   const wakeReason = readNonEmptyString(contextSnapshot?.wakeReason);
   if (wakeReason === "issue_assigned") return "wake reason is issue_assigned";
+  if (wakeReason === "execution_review_requested") return "wake reason is execution_review_requested";
+  if (wakeReason === "execution_approval_requested") return "wake reason is execution_approval_requested";
+  if (wakeReason === "execution_changes_requested") return "wake reason is execution_changes_requested";
   return null;
 }
 
@@ -867,9 +889,8 @@ async function buildPaperclipWakePayload(input: {
       }
     | null;
 }) {
+  const executionStage = parseObject(input.contextSnapshot.executionStage);
   const commentIds = extractWakeCommentIds(input.contextSnapshot);
-  if (commentIds.length === 0) return null;
-
   const issueId = readNonEmptyString(input.contextSnapshot.issueId);
   const issueSummary =
     input.issueSummary ??
@@ -886,23 +907,27 @@ async function buildPaperclipWakePayload(input: {
           .where(and(eq(issues.id, issueId), eq(issues.companyId, input.companyId)))
           .then((rows) => rows[0] ?? null)
       : null);
+  if (commentIds.length === 0 && Object.keys(executionStage).length === 0 && !issueSummary) return null;
 
-  const commentRows = await input.db
-    .select({
-      id: issueComments.id,
-      issueId: issueComments.issueId,
-      body: issueComments.body,
-      authorAgentId: issueComments.authorAgentId,
-      authorUserId: issueComments.authorUserId,
-      createdAt: issueComments.createdAt,
-    })
-    .from(issueComments)
-    .where(
-      and(
-        eq(issueComments.companyId, input.companyId),
-        inArray(issueComments.id, commentIds),
-      ),
-    );
+  const commentRows =
+    commentIds.length === 0
+      ? []
+      : await input.db
+          .select({
+            id: issueComments.id,
+            issueId: issueComments.issueId,
+            body: issueComments.body,
+            authorAgentId: issueComments.authorAgentId,
+            authorUserId: issueComments.authorUserId,
+            createdAt: issueComments.createdAt,
+          })
+          .from(issueComments)
+          .where(
+            and(
+              eq(issueComments.companyId, input.companyId),
+              inArray(issueComments.id, commentIds),
+            ),
+          );
 
   const commentsById = new Map(commentRows.map((comment) => [comment.id, comment]));
   const comments: Array<Record<string, unknown>> = [];
@@ -959,6 +984,7 @@ async function buildPaperclipWakePayload(input: {
           priority: issueSummary.priority,
         }
       : null,
+    executionStage: Object.keys(executionStage).length > 0 ? executionStage : null,
     commentIds,
     latestCommentId: commentIds[commentIds.length - 1] ?? null,
     comments,
@@ -2021,6 +2047,17 @@ export function heartbeatService(db: Db) {
       return { outcome: "retry_exhausted" as const, queuedRun: null };
     }
 
+    if (!shouldRequireIssueCommentForWake(contextSnapshot)) {
+      if (run.issueCommentStatus !== "not_applicable") {
+        await patchRunIssueCommentStatus(run.id, {
+          issueCommentStatus: "not_applicable",
+          issueCommentSatisfiedByCommentId: null,
+          issueCommentRetryQueuedAt: null,
+        });
+      }
+      return { outcome: "not_applicable" as const, queuedRun: null };
+    }
+
     const queuedRun = await enqueueMissingIssueCommentRetry(run, agent, issueId);
     if (queuedRun) {
       await appendRunEvent(run, await nextRunEventSeq(run.id), {
@@ -2147,7 +2184,7 @@ export function heartbeatService(db: Db) {
     const heartbeat = parseObject(runtimeConfig.heartbeat);
 
     return {
-      enabled: asBoolean(heartbeat.enabled, true),
+      enabled: asBoolean(heartbeat.enabled, false),
       intervalSec: Math.max(0, asNumber(heartbeat.intervalSec, 0)),
       wakeOnDemand: asBoolean(heartbeat.wakeOnDemand ?? heartbeat.wakeOnAssignment ?? heartbeat.wakeOnOnDemand ?? heartbeat.wakeOnAutomation, true),
       maxConcurrentRuns: normalizeMaxConcurrentRuns(heartbeat.maxConcurrentRuns),
@@ -2214,6 +2251,29 @@ export function heartbeatService(db: Db) {
     });
 
     await setWakeupStatus(claimed.wakeupRequestId, "claimed", { claimedAt });
+
+    // Fix A (lazy locking): stamp executionRunId now that the run is actually running,
+    // not at queue time. Guard is idempotent — safe if called more than once.
+    const claimedIssueId = readNonEmptyString(parseObject(claimed.contextSnapshot).issueId);
+    if (claimedIssueId) {
+      const claimedAgent = await getAgent(claimed.agentId);
+      await db
+        .update(issues)
+        .set({
+          executionRunId: claimed.id,
+          executionAgentNameKey: normalizeAgentNameKey(claimedAgent?.name),
+          executionLockedAt: claimedAt,
+          updatedAt: claimedAt,
+        })
+        .where(
+          and(
+            eq(issues.id, claimedIssueId),
+            eq(issues.companyId, claimed.companyId),
+            or(isNull(issues.executionRunId), eq(issues.executionRunId, claimed.id)),
+          ),
+        );
+    }
+
     return claimed;
   }
 
@@ -3940,15 +4000,9 @@ export function heartbeatService(db: Db) {
           })
           .where(eq(agentWakeupRequests.id, wakeupRequest.id));
 
-        await tx
-          .update(issues)
-          .set({
-            executionRunId: newRun.id,
-            executionAgentNameKey: agentNameKey,
-            executionLockedAt: new Date(),
-            updatedAt: new Date(),
-          })
-          .where(eq(issues.id, issue.id));
+        // executionRunId is NOT stamped here (enqueueWakeup queues the run but
+        // doesn't start it). It will be stamped in claimQueuedRun() once the run
+        // transitions to "running" — Fix A (lazy locking).
 
         return { kind: "queued" as const, run: newRun };
       });
