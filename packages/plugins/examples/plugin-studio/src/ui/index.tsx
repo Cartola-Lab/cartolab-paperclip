@@ -23,6 +23,7 @@ export function StudioSidebarEntry(_props: PluginSidebarProps) {
     try {
       const res = await fetch("/api/studio/generate-token", {
         method: "POST",
+        credentials: "include",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ companyId }),
       });
