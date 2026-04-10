@@ -19,7 +19,7 @@ export function studioTokenRoutes() {
 
     const companyId: string =
       (req.body as { companyId?: string })?.companyId ??
-      (req.actor.type === "board" && req.actor.companyIds?.[0]) ??
+      (req.actor.type === "board" ? req.actor.companyIds?.[0] : undefined) ??
       "";
 
     const { token, expiresAt } = studioTokenService.generate(userId, companyId);
