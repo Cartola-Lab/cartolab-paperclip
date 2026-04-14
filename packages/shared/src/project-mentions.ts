@@ -144,9 +144,9 @@ export function parseSkillMentionHref(href: string): ParsedSkillMention | null {
 export function extractProjectMentionIds(markdown: string): string[] {
   if (!markdown) return [];
   const ids = new Set<string>();
-  const re = new RegExp(PROJECT_MENTION_LINK_RE);
+  PROJECT_MENTION_LINK_RE.lastIndex = 0;
   let match: RegExpExecArray | null;
-  while ((match = re.exec(markdown)) !== null) {
+  while ((match = PROJECT_MENTION_LINK_RE.exec(markdown)) !== null) {
     const parsed = parseProjectMentionHref(match[1]);
     if (parsed) ids.add(parsed.projectId);
   }
@@ -156,9 +156,9 @@ export function extractProjectMentionIds(markdown: string): string[] {
 export function extractAgentMentionIds(markdown: string): string[] {
   if (!markdown) return [];
   const ids = new Set<string>();
-  const re = new RegExp(AGENT_MENTION_LINK_RE);
+  AGENT_MENTION_LINK_RE.lastIndex = 0;
   let match: RegExpExecArray | null;
-  while ((match = re.exec(markdown)) !== null) {
+  while ((match = AGENT_MENTION_LINK_RE.exec(markdown)) !== null) {
     const parsed = parseAgentMentionHref(match[1]);
     if (parsed) ids.add(parsed.agentId);
   }
@@ -168,9 +168,9 @@ export function extractAgentMentionIds(markdown: string): string[] {
 export function extractSkillMentionIds(markdown: string): string[] {
   if (!markdown) return [];
   const ids = new Set<string>();
-  const re = new RegExp(SKILL_MENTION_LINK_RE);
+  SKILL_MENTION_LINK_RE.lastIndex = 0;
   let match: RegExpExecArray | null;
-  while ((match = re.exec(markdown)) !== null) {
+  while ((match = SKILL_MENTION_LINK_RE.exec(markdown)) !== null) {
     const parsed = parseSkillMentionHref(match[1]);
     if (parsed) ids.add(parsed.skillId);
   }
