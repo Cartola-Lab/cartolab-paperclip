@@ -457,6 +457,15 @@ curl -X POST http://127.0.0.1:3100/api/plugins/install \\
   return outputDir;
 }
 
+const logger = {
+  log: (message: string) => {
+    process.stdout.write(`${message}\n`);
+  },
+  error: (message: string) => {
+    process.stderr.write(`${message}\n`);
+  },
+};
+
 function parseArg(name: string): string | undefined {
   const index = process.argv.indexOf(name);
   if (index === -1) return undefined;
@@ -467,8 +476,7 @@ function parseArg(name: string): string | undefined {
 function runCli() {
   const pluginName = process.argv[2];
   if (!pluginName) {
-    // eslint-disable-next-line no-console
-    console.error("Usage: create-paperclip-plugin <name> [--template default|connector|workspace] [--output <dir>] [--sdk-path <paperclip-sdk-path>]");
+    logger.error("Usage: create-paperclip-plugin <name> [--template default|connector|workspace] [--output <dir>] [--sdk-path <paperclip-sdk-path>]");
     process.exit(1);
   }
 
@@ -487,8 +495,7 @@ function runCli() {
     sdkPath: parseArg("--sdk-path"),
   });
 
-  // eslint-disable-next-line no-console
-  console.log(`Created plugin scaffold at ${out}`);
+  logger.log(`Created plugin scaffold at ${out}`);
 }
 
 if (import.meta.url === `file://${process.argv[1]}`) {
