@@ -50,7 +50,7 @@ export function StudioSidebarEntry(_props: PluginSidebarProps) {
       disabled={loading}
       aria-busy={loading}
       className={[
-        "flex w-full items-center gap-2.5 px-3 py-2 text-[13px] font-medium transition-colors",
+        "flex w-full items-center gap-2.5 px-3 py-2 text-[13px] font-medium transition-colors text-left",
         loading
           ? "cursor-wait opacity-60"
           : "cursor-pointer text-foreground/80 hover:bg-accent/50 hover:text-foreground",
