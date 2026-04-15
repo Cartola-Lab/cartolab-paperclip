@@ -25,7 +25,16 @@ const mockBoardAuthService = vi.hoisted(() => ({
 
 const mockLogActivity = vi.hoisted(() => vi.fn());
 
-function registerServiceMocks() {
+vi.mock("../services/index.js", () => ({
+  accessService: () => mockAccessService,
+  agentService: () => mockAgentService,
+  boardAuthService: () => mockBoardAuthService,
+  logActivity: mockLogActivity,
+  notifyHireApproved: vi.fn(),
+  deduplicateAgentName: vi.fn((name: string) => name),
+}));
+
+function registerModuleMocks() {
   vi.doMock("../services/index.js", () => ({
     accessService: () => mockAccessService,
     agentService: () => mockAgentService,
@@ -36,35 +45,37 @@ function registerServiceMocks() {
   }));
 }
 
-function createApp(actor: any) {
+async function createApp(actor: any) {
+  const [{ accessRoutes }, { errorHandler }] = await Promise.all([
+    vi.importActual<typeof import("../routes/access.js")>("../routes/access.js"),
+    vi.importActual<typeof import("../middleware/index.js")>("../middleware/index.js"),
+  ]);
   const app = express();
   app.use(express.json());
   app.use((req, _res, next) => {
     req.actor = actor;
     next();
   });
-  return import("../routes/access.js").then(({ accessRoutes }) =>
-    import("../middleware/index.js").then(({ errorHandler }) => {
-      app.use(
-        "/api",
-        accessRoutes({} as any, {
-          deploymentMode: "authenticated",
-          deploymentExposure: "private",
-          bindHost: "127.0.0.1",
-          allowedHostnames: [],
-        }),
-      );
-      app.use(errorHandler);
-      return app;
-    })
+  app.use(
+    "/api",
+    accessRoutes({} as any, {
+      deploymentMode: "authenticated",
+      deploymentExposure: "private",
+      bindHost: "127.0.0.1",
+      allowedHostnames: [],
+    }),
   );
+  app.use(errorHandler);
+  return app;
 }
 
 describe("cli auth routes", () => {
   beforeEach(() => {
     vi.resetModules();
-    registerServiceMocks();
-    vi.clearAllMocks();
+    vi.doUnmock("../routes/access.js");
+    vi.doUnmock("../middleware/index.js");
+    registerModuleMocks();
+    vi.resetAllMocks();
   });
 
   it("creates a CLI auth challenge with approval metadata", async () => {

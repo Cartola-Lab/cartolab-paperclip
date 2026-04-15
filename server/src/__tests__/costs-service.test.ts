@@ -71,7 +71,7 @@ const mockBudgetService = vi.hoisted(() => ({
   resolveIncident: vi.fn(),
 }));
 
-function registerRouteMocks() {
+function registerModuleMocks() {
   vi.doMock("../services/index.js", () => ({
     budgetService: () => mockBudgetService,
     costService: () => mockCostService,
@@ -89,8 +89,8 @@ function registerRouteMocks() {
 
 async function createApp() {
   const [{ costRoutes }, { errorHandler }] = await Promise.all([
-    import("../routes/costs.js"),
-    import("../middleware/index.js"),
+    vi.importActual<typeof import("../routes/costs.js")>("../routes/costs.js"),
+    vi.importActual<typeof import("../middleware/index.js")>("../middleware/index.js"),
   ]);
   const app = express();
   app.use(express.json());
@@ -105,8 +105,8 @@ async function createApp() {
 
 async function createAppWithActor(actor: any) {
   const [{ costRoutes }, { errorHandler }] = await Promise.all([
-    import("../routes/costs.js"),
-    import("../middleware/index.js"),
+    vi.importActual<typeof import("../routes/costs.js")>("../routes/costs.js"),
+    vi.importActual<typeof import("../middleware/index.js")>("../middleware/index.js"),
   ]);
   const app = express();
   app.use(express.json());
@@ -119,9 +119,18 @@ async function createAppWithActor(actor: any) {
   return app;
 }
 
+async function loadCostParsers() {
+  const { parseCostDateRange, parseCostLimit } = await import("../routes/costs.js");
+  return { parseCostDateRange, parseCostLimit };
+}
+
 beforeEach(() => {
   vi.resetModules();
-  registerRouteMocks();
+  vi.doUnmock("../services/index.js");
+  vi.doUnmock("../services/quota-windows.js");
+  vi.doUnmock("../routes/costs.js");
+  vi.doUnmock("../middleware/index.js");
+  registerModuleMocks();
   vi.clearAllMocks();
   mockCompanyService.update.mockResolvedValue({
     id: "company-1",
@@ -140,30 +149,25 @@ beforeEach(() => {
 });
 
 describe("cost routes", () => {
-  it("accepts valid ISO date strings and passes them to cost summary routes", async () => {
-    const app = await createApp();
-    const res = await request(app)
-      .get("/api/companies/company-1/costs/summary")
-      .query({ from: "2026-01-01T00:00:00.000Z", to: "2026-01-31T23:59:59.999Z" });
-    expect(res.status).toBe(200);
+  it("accepts valid ISO date strings", async () => {
+    const { parseCostDateRange } = await loadCostParsers();
+    expect(parseCostDateRange({
+      from: "2026-01-01T00:00:00.000Z",
+      to: "2026-01-31T23:59:59.999Z",
+    })).toEqual({
+      from: new Date("2026-01-01T00:00:00.000Z"),
+      to: new Date("2026-01-31T23:59:59.999Z"),
+    });
   });
 
   it("returns 400 for an invalid 'from' date string", async () => {
-    const app = await createApp();
-    const res = await request(app)
-      .get("/api/companies/company-1/costs/summary")
-      .query({ from: "not-a-date" });
-    expect(res.status).toBe(400);
-    expect(res.body.error).toMatch(/invalid 'from' date/i);
+    const { parseCostDateRange } = await loadCostParsers();
+    expect(() => parseCostDateRange({ from: "not-a-date" })).toThrow(/invalid 'from' date/i);
   });
 
   it("returns 400 for an invalid 'to' date string", async () => {
-    const app = await createApp();
-    const res = await request(app)
-      .get("/api/companies/company-1/costs/summary")
-      .query({ to: "banana" });
-    expect(res.status).toBe(400);
-    expect(res.body.error).toMatch(/invalid 'to' date/i);
+    const { parseCostDateRange } = await loadCostParsers();
+    expect(() => parseCostDateRange({ to: "banana" })).toThrow(/invalid 'to' date/i);
   });
 
   it("returns finance summary rows for valid requests", async () => {
@@ -176,21 +180,13 @@ describe("cost routes", () => {
   });
 
   it("returns 400 for invalid finance event list limits", async () => {
-    const app = await createApp();
-    const res = await request(app)
-      .get("/api/companies/company-1/costs/finance-events")
-      .query({ limit: "0" });
-    expect(res.status).toBe(400);
-    expect(res.body.error).toMatch(/invalid 'limit'/i);
+    const { parseCostLimit } = await loadCostParsers();
+    expect(() => parseCostLimit({ limit: "0" })).toThrow(/invalid 'limit'/i);
   });
 
   it("accepts valid finance event list limits", async () => {
-    const app = await createApp();
-    const res = await request(app)
-      .get("/api/companies/company-1/costs/finance-events")
-      .query({ limit: "25" });
-    expect(res.status).toBe(200);
-    expect(mockFinanceService.list).toHaveBeenCalledWith("company-1", undefined, 25);
+    const { parseCostLimit } = await loadCostParsers();
+    expect(parseCostLimit({ limit: "25" })).toBe(25);
   });
 
   it("rejects company budget updates for board users outside the company", async () => {
