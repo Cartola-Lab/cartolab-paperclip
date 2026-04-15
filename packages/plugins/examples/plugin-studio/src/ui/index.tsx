@@ -31,7 +31,7 @@ export function StudioSidebarEntry(_props: PluginSidebarProps) {
         throw new Error(`Token request failed (${res.status})`);
       }
       const { token } = (await res.json()) as { token: string };
-      window.open(`${STUDIO_APP_URL}?access_token=${encodeURIComponent(token)}`, "_blank");
+      window.open(`${STUDIO_APP_URL}/auth/studio/callback?access_token=${encodeURIComponent(token)}`, "_blank");
     } catch (err) {
       toast({
         title: "Could not open Studio",

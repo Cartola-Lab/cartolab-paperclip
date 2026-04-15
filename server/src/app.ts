@@ -139,6 +139,9 @@ export async function createApp(
   }
   app.use(llmRoutes(db));
 
+  // Studio validate-token is public (called server-to-server, no Origin header)
+  app.use("/api", studioTokenRoutes());
+
   // Mount API routes
   const api = Router();
   api.use(boardMutationGuard());
@@ -234,7 +237,6 @@ export async function createApp(
     ),
   );
   api.use(adapterRoutes());
-  api.use(studioTokenRoutes());
   api.use(
     accessRoutes(db, {
       deploymentMode: opts.deploymentMode,
