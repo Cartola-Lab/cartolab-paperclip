@@ -1,1 +1,22 @@
-/projects/cartolab-paperclip/docker/docker-compose.yml
+services:
+  server:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    ports:
+      - "3100:3100"
+    env_file:
+      - .env
+    volumes:
+      - paperclip-data:/paperclip
+    networks:
+      - pb-network
+
+volumes:
+  paperclip-data:
+    external: true
+    name: paperclip_paperclip-data
+
+networks:
+  pb-network:
+    external: true
