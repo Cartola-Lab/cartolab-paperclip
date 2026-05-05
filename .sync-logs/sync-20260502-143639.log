@@ -1,0 +1,22 @@
+============================================================
+ sync-upstream.sh — sáb 02 mai 2026 14:36:39 UTC
+ DRY_RUN=true
+============================================================
+[1;33m[WARN][0m Modo DRY-RUN ativado — nenhuma alteração será feita no repo
+[0;36m[SYNC][0m Branch atual: dev
+[0;32m[OK][0m   Working tree limpa
+[0;32m[OK][0m   Remote 'upstream' já existe: https://github.com/paperclipai/paperclip.git
+[0;36m[SYNC][0m Fazendo fetch do upstream...
+[0;32m[OK][0m   Fetch concluído
+[1;33m[WARN][0m DRY-RUN: pulando merge e preservação de arquivos
+[0;36m[SYNC][0m Arquivos que seriam verificados para customização:
+   • docker-compose.yml
+   • docker-compose.prod.yml
+   • .env.example
+   • scripts/docker-entrypoint.sh
+   • scripts/release.sh
+   • scripts/rollback-latest.sh
+   • packages/ui/src/components
+   • packages/server/src/cartolab
+   • packages/ui/src/styles
+[1;33m[WARN][0m DRY-RUN finalizado. Nenhuma alteração aplicada.

@@ -1,0 +1,35 @@
+============================================================
+ sync-upstream.sh — sáb 02 mai 2026 14:39:04 UTC
+ DRY_RUN=false
+============================================================
+[0;36m[SYNC][0m Branch atual: dev
+[0;32m[OK][0m   Working tree limpa
+[0;32m[OK][0m   Remote 'upstream' já existe: https://github.com/paperclipai/paperclip.git
+[0;36m[SYNC][0m Fazendo fetch do upstream...
+From https://github.com/paperclipai/paperclip
+ * branch              master     -> FETCH_HEAD
+   d4c3899c..76f09c8e  master     -> upstream/master
+[0;32m[OK][0m   Fetch concluído
+[0;36m[SYNC][0m Identificando diferenças em relação ao upstream/master...
+[0;36m[SYNC][0m Arquivos diferentes do upstream: 947
+[0;36m[SYNC][0m   → Customizados (nossa versão será preservada): 3
+[0;36m[SYNC][0m   → Upstream (serão atualizados): 944
+[0;36m[SYNC][0m Iniciando merge do upstream/master...
+Auto-merging Dockerfile
+CONFLICT (content): Merge conflict in Dockerfile
+Auto-merging packages/mcp-server/src/tools.ts
+Auto-merging packages/plugins/create-paperclip-plugin/src/index.ts
+Auto-merging packages/shared/src/project-mentions.ts
+Auto-merging pnpm-lock.yaml
+CONFLICT (content): Merge conflict in pnpm-lock.yaml
+Auto-merging server/src/app.ts
+CONFLICT (content): Merge conflict in server/src/app.ts
+Auto-merging server/src/routes/index.ts
+CONFLICT (content): Merge conflict in server/src/routes/index.ts
+Auto-merging ui/src/context/BreadcrumbContext.tsx
+Auto-merging ui/src/pages/AgentDetail.tsx
+Auto-merging ui/src/pages/Auth.tsx
+Automatic merge failed; fix conflicts and then commit the result.
+[0;31m[ERR][0m  Merge falhou com conflitos não resolvidos automaticamente!
+[0;31m[ERR][0m  Resolva os conflitos manualmente e rode: git merge --continue
+[0;31m[ERR][0m  Log completo em: /projects/cartolab-paperclip/.sync-logs/sync-20260502-143904.log
