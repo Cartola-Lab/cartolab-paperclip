@@ -1,0 +1,55 @@
+project: ""
+owner: "BroMaster"
+status: "not_started" # not_started | planning | ready | in_progress | blocked | completed
+last_updated: ""
+
+source_artifacts:
+  project_context: "PROJECT_CONTEXT.md"
+  prd: "PRD.md"
+  architecture: "ARCHITECTURE.md"
+  epics_and_stories: "EPICS_AND_STORIES.md"
+  implementation_readiness: "IMPLEMENTATION_READINESS.md"
+
+current_focus:
+  epic_id: ""
+  story_id: ""
+  owner_agent: ""
+  status: ""
+
+workflow_gates:
+  prd_ready: false
+  architecture_ready: false
+  epics_and_stories_ready: false
+  implementation_readiness_approved: false
+  review_required: true
+  qa_required: true
+  deploy_allowed: false
+
+epics:
+  - id: "EPIC-001"
+    title: ""
+    status: "planned" # planned | in_progress | blocked | done
+    priority: "high"
+    stories:
+      - id: "STORY-001"
+        title: ""
+        status: "planned" # planned | ready | assigned | in_progress | review | qa | blocked | done
+        owner_agent: "BroBuilder"
+        depends_on: []
+        acceptance_criteria: []
+        review_status: "not_started" # not_started | passed | failed
+        qa_status: "not_required" # not_required | not_started | passed | failed
+        notes: ""
+
+blockers:
+  - id: "BLOCKER-001"
+    description: ""
+    owner: ""
+    required_action: ""
+    status: "open" # open | resolved
+
+activity_log:
+  - date: ""
+    actor: ""
+    event: ""
+    result: ""
