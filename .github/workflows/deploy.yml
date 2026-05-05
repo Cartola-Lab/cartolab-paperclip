@@ -7,16 +7,52 @@ jobs:
   deploy:
     runs-on: ubuntu-latest
 
+    env:
+      CF_SSH_HOST: ${{ secrets.CF_SSH_HOST }}
+      CF_ACCESS_CLIENT_ID: ${{ secrets.CF_ACCESS_CLIENT_ID }}
+      CF_ACCESS_CLIENT_SECRET: ${{ secrets.CF_ACCESS_CLIENT_SECRET }}
+
     steps:
-      - name: Deploy via SSH
-        uses: appleboy/ssh-action@v1.0.3
-        with:
-          host: ${{ secrets.SERVER_HOST }}
-          username: ${{ secrets.SERVER_USER }}
-          key: ${{ secrets.SERVER_SSH_KEY }}
-          port: ${{ secrets.SERVER_PORT }}
-          script: |
-            whoami
-            hostname
-            pwd
-            echo "Conexão SSH OK"
+      - name: Install cloudflared
+        run: |
+          curl -L --output cloudflared.deb https://github.com/cloudflare/cloudflared/releases/latest/download/cloudflared-linux-amd64.deb
+          sudo dpkg -i cloudflared.deb
+          cloudflared --version
+
+      - name: Configure SSH key
+        run: |
+          mkdir -p ~/.ssh
+          chmod 700 ~/.ssh
+          printf '%s\n' "${{ secrets.SERVER_SSH_KEY }}" > ~/.ssh/deploy_key
+          chmod 600 ~/.ssh/deploy_key
+
+      - name: Test SSH via Cloudflare Tunnel
+        run: |
+          set -e
+
+          if [ -z "$CF_SSH_HOST" ]; then
+            echo "CF_SSH_HOST secret is empty. Create it with your Cloudflare SSH hostname, for example ssh.example.com."
+            exit 1
+          fi
+
+          if [ -n "$CF_ACCESS_CLIENT_ID" ] && [ -n "$CF_ACCESS_CLIENT_SECRET" ]; then
+            cloudflared access tcp \
+              --hostname "$CF_SSH_HOST" \
+              --url 127.0.0.1:2222 \
+              --service-token-id "$CF_ACCESS_CLIENT_ID" \
+              --service-token-secret "$CF_ACCESS_CLIENT_SECRET" &
+          else
+            cloudflared access tcp \
+              --hostname "$CF_SSH_HOST" \
+              --url 127.0.0.1:2222 &
+          fi
+
+          sleep 5
+
+          ssh \
+            -i ~/.ssh/deploy_key \
+            -p 2222 \
+            -o StrictHostKeyChecking=no \
+            -o UserKnownHostsFile=/dev/null \
+            "${{ secrets.SERVER_USER }}@127.0.0.1" \
+            'whoami && hostname && pwd && echo "Conexão SSH via Cloudflare OK"'
