@@ -26,12 +26,12 @@ jobs:
           printf '%s\n' "${{ secrets.SERVER_SSH_KEY }}" > ~/.ssh/deploy_key
           chmod 600 ~/.ssh/deploy_key
 
-      - name: Test SSH via Cloudflare Tunnel
+      - name: Deploy via Cloudflare Tunnel
         run: |
           set -e
 
           if [ -z "$CF_SSH_HOST" ]; then
-            echo "CF_SSH_HOST secret is empty. Create it with your Cloudflare SSH hostname, for example ssh.example.com."
+            echo "CF_SSH_HOST secret is empty."
             exit 1
           fi
 
@@ -55,4 +55,18 @@ jobs:
             -o StrictHostKeyChecking=no \
             -o UserKnownHostsFile=/dev/null \
             "${{ secrets.SERVER_USER }}@127.0.0.1" \
-            'whoami && hostname && pwd && echo "Conexão SSH via Cloudflare OK"'
+            'set -e
+             cd /projects/cartolab-paperclip
+             echo "== Current directory =="
+             pwd
+             echo "== Fetching origin =="
+             git fetch origin
+             echo "== Switching to main =="
+             git checkout main
+             echo "== Resetting to origin/main =="
+             git reset --hard origin/main
+             echo "== Docker compose build/up =="
+             docker compose up -d --build
+             echo "== Docker compose status =="
+             docker compose ps
+             echo "Deploy OK"'
