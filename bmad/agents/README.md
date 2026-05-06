@@ -33,6 +33,7 @@ Example:
 - bmad/agents/broreview/README.md
 - bmad/agents/broqa/README.md
 - bmad/agents/brodesign/README.md
+- bmad/agents/brodocs/README.md
 
 Avoid flat prompt files directly under bmad/agents unless they are shared index or policy files.
 
@@ -47,6 +48,7 @@ Avoid flat prompt files directly under bmad/agents unless they are shared index 
 | bmad/agents/broreview/README.md | BroReview | Technical Review Agent |
 | bmad/agents/broqa/README.md | BroQA | QA / Functional Validation Agent |
 | bmad/agents/brodesign/README.md | BroDesign | UI/UX Designer / Design System Authority |
+| bmad/agents/brodocs/README.md | BroDocs | Documentation / Knowledge Management Agent |
 
 Additional prompts should be added here as agents are standardized.
 
