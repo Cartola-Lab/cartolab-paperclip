@@ -18,11 +18,25 @@ These prompts must follow the BMAD operating model defined in:
 - API-level delegation is not the default workflow.
 - Implementation must not start before PRD, Architecture, Stories, and Readiness gates are satisfied.
 
+## Folder convention
+
+Each agent gets its own folder.
+
+The prompt for each agent lives in that folder's README.md.
+
+Example:
+
+- bmad/agents/bromaster/README.md
+- bmad/agents/broarchitect/README.md
+
+Avoid flat prompt files directly under bmad/agents unless they are shared index or policy files.
+
 ## Agent prompt files
 
-| File | Agent | Role |
+| Path | Agent | Role |
 |---|---|---|
-| BROMASTER.md | BroMaster | Project Manager / Lead Orchestrator |
+| bmad/agents/bromaster/README.md | BroMaster | Project Manager / Lead Orchestrator |
+| bmad/agents/broarchitect/README.md | BroArchitect | Technical Architect / System Design Authority |
 
 Additional prompts should be added here as agents are standardized.
 
@@ -32,4 +46,4 @@ The repository deploys automatically from main.
 
 Agents must treat pushes to main as production-impacting changes.
 
-Deployment details live outside the prompt layer, but BroMaster must know that production release is automated after main is updated.
+Deployment details live outside the prompt layer, but BroMaster and technical agents must know that production release is automated after main is updated.
