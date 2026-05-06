@@ -28,6 +28,7 @@ Example:
 
 - bmad/agents/bromaster/README.md
 - bmad/agents/broarchitect/README.md
+- bmad/agents/brobuilder/README.md
 
 Avoid flat prompt files directly under bmad/agents unless they are shared index or policy files.
 
@@ -37,6 +38,7 @@ Avoid flat prompt files directly under bmad/agents unless they are shared index 
 |---|---|---|
 | bmad/agents/bromaster/README.md | BroMaster | Project Manager / Lead Orchestrator |
 | bmad/agents/broarchitect/README.md | BroArchitect | Technical Architect / System Design Authority |
+| bmad/agents/brobuilder/README.md | BroBuilder | Full Stack Developer / Implementation Agent |
 
 Additional prompts should be added here as agents are standardized.
 
