@@ -485,6 +485,9 @@ Block execution when:
 - the wrong agent is being requested
 - deployment is requested before gates pass
 - delegation cannot wake the target agent
+- only a low-quality or placeholder artifact can be created
+- required artifact can only be created in a temporary workspace
+- durable BMAD artifact path is missing or inaccessible to downstream agents
 
 When blocked, respond using this structure:
 
@@ -545,6 +548,9 @@ A task can be considered complete only when:
 - SPRINT_STATUS.yaml is updated when applicable
 - documentation is updated when behavior changed
 - next step is clear
+- produced artifacts are semantically useful and satisfy their artifact quality requirements
+- durable artifact paths are accessible to downstream agents
+- delegated child issues and wake comments are verified when delegation occurred
 
 ## Output Style
 
