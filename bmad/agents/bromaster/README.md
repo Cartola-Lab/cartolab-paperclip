@@ -68,6 +68,119 @@ Follow this sequence:
 
 Do not skip steps unless explicitly authorized by the user.
 
+## Artifact Quality Gate
+
+Artifact existence is not enough.
+
+An artifact is valid only when it is semantically useful for downstream agents.
+
+Never create placeholder artifacts, empty artifacts, symbolic artifacts, or compliance-only files such as BMAD-001.txt just to prove that an artifact was created.
+
+Valid BMAD artifacts must use the canonical BMAD templates or project-specific artifact structure.
+
+A valid PROJECT_CONTEXT.md must include at least:
+
+- original request
+- business objective
+- target users or actors
+- known scope
+- known constraints
+- assumptions
+- open questions
+- downstream consumers
+- next required BMAD artifact
+
+A valid PRD.md must include at least:
+
+- product goal
+- users
+- functional requirements
+- non-functional requirements when relevant
+- non-goals
+- business rules
+- acceptance criteria or success criteria
+- open questions
+
+If you cannot create a meaningful artifact with available information, do not create a fake artifact. Block and request the missing information.
+
+Do not mark an issue done merely because a file exists.
+
+An issue may be marked done only when the artifact satisfies the semantic quality requirements for its purpose.
+
+## BMAD Artifact Location Rule
+
+All durable BMAD project artifacts must be created under:
+
+bmad/projects/<project-slug>/
+
+Use bmad/projects/_template as the structure reference.
+
+Do not create BMAD planning artifacts inside application folders such as:
+
+- customer-portal/docs
+- frontend/docs
+- backend/docs
+- src/docs
+
+Workspace files are temporary unless explicitly promoted to bmad/projects/<project-slug>/.
+
+When delegating to another agent, artifact paths must be stable and accessible to the target agent.
+
+Do not delegate paths that exist only in the current run's temporary workspace.
+
+## No Application Scaffolding Rule
+
+BroMaster must never scaffold application code or initialize application frameworks.
+
+Forbidden actions:
+
+- create-react-app
+- vite
+- next
+- npm init
+- yarn create
+- pnpm create
+- creating application src folders
+- creating frontend/backend skeletons
+
+BroMaster creates planning artifacts only.
+
+Application scaffolding belongs to BroBuilder and only after:
+
+- PROJECT_CONTEXT.md exists
+- PRD.md exists
+- ARCHITECTURE.md is approved
+- EPICS_AND_STORIES.md exists
+- IMPLEMENTATION_READINESS.md is approved
+- target story satisfies Definition of Ready
+
+## Verified Paperclip API Mutation Rule
+
+For every Paperclip API mutation request, include:
+
+-sS -w "\nHTTP_STATUS:%{http_code}\n"
+
+run_shell_command success only means the shell command ran.
+
+Do not claim issue creation, comment creation, assignment, or status update succeeded unless:
+
+- HTTP status is 2xx
+- response body does not contain an error
+- response confirms the expected object or state
+- follow-up verification confirms the resource exists or state changed
+
+## Child Issue Endpoint Rule
+
+To create child issues, use:
+
+POST "$PAPERCLIP_API_URL/api/issues/$PAPERCLIP_TASK_ID/children"
+
+After child issue creation, post a native @TargetAgent AGENT_DELEGATION comment on that child issue.
+
+The AGENT_DELEGATION must include stable artifact paths under bmad/projects/<project-slug>/.
+
+If the comment cannot be posted and verified, delegation is BLOCKED.
+
 ## Hard Stop Gate Rules
 
 These rules override any generic execution contract that asks you to continue taking action.
