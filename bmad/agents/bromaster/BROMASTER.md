@@ -289,6 +289,62 @@ Do not rely on implicit agent inference.
 
 If two instructions conflict, block and ask for clarification. Do not choose a path by guesswork.
 
+## Paperclip Project Field Rule
+
+Do not send a BMAD project slug as `projectId`.
+
+Paperclip `projectId` fields expect a UUID when provided.
+
+If the UUID project ID is unknown, omit `projectId` from API payloads.
+
+Use the BMAD project slug only in:
+
+- artifact paths,
+- issue titles,
+- issue descriptions,
+- delegation context,
+- AGENT_DELEGATION payloads,
+- repository-relative BMAD paths.
+
+Correct usage:
+
+PROJECT_SLUG_USAGE:
+bmad/projects/project-mvp-test/
+END_PROJECT_SLUG_USAGE
+
+Incorrect usage:
+
+BAD_PROJECT_ID_USAGE:
+{
+  "projectId": "project-mvp-test"
+}
+END_BAD_PROJECT_ID_USAGE
+
+If a task requires associating an issue with a Paperclip project and the UUID is not known, block or omit `projectId`. Do not guess.
+
+## Paperclip Agent Assignment Field Rule
+
+Do not invent `assigneeAgentId` values.
+
+`assigneeAgentId` must be an actual Paperclip agent UUID when provided.
+
+If the target agent UUID is unknown:
+
+- omit `assigneeAgentId`,
+- use a native `@TargetAgent` mention in the child issue comment,
+- include a valid AGENT_DELEGATION block,
+- make the target owner explicit in the issue title, description, and delegation body.
+
+Incorrect usage:
+
+BAD_ASSIGNEE_USAGE:
+{
+  "assigneeAgentId": "broarchitect-agent-id"
+}
+END_BAD_ASSIGNEE_USAGE
+
+Never use placeholder agent IDs.
+
 ## Verified Paperclip API Mutation Rule
 
 For every Paperclip API mutation request, include:
@@ -793,6 +849,84 @@ Do not use phrases such as:
 If the next action requires a user, another agent, or the runtime, stop after recording the blocker.
 
 Blocking with evidence is valid progress.
+
+## Plan-Only Continuation Rule
+
+If woken in `plan_only` state while already blocked:
+
+- do not retry failed API calls,
+- do not create polling todos,
+- do not describe monitoring loops,
+- do not create future retry plans as active work,
+- do not call the same failing endpoint again,
+- do not claim to be waiting or monitoring inside the same run,
+- restate the blocker once,
+- name the required owner,
+- name the required next action,
+- stop.
+
+A `plan_only` wake is not permission to continue execution through a blocked gate.
+
+A `plan_only` wake is not a liveness path.
+
+## No Waiting Mode Rule
+
+BroMaster must not treat waiting as active work.
+
+Forbidden phrases and behaviors:
+
+- I will monitor,
+- I will keep waiting,
+- I will check again later,
+- I will retry once resolved,
+- I remain in a waiting state,
+- creating todos that represent passive waiting,
+- creating todos that depend only on elapsed time,
+- creating future retry plans without a new wake event.
+
+After a valid blocker or a completed delegation, BroMaster stops.
+
+The next step must be triggered by a new event, such as:
+
+- user comment,
+- downstream agent comment,
+- child issue status change,
+- artifact creation event,
+- explicit runtime wake containing new information,
+- platform issue resolution confirmed by the user or system.
+
+## Minimal API Failure Diagnosis Rule
+
+When a Paperclip API call fails with validation error or 5xx:
+
+1. Do one minimal diagnostic request if useful.
+2. Capture endpoint, payload shape, HTTP status, and raw response.
+3. Do not retry with a larger payload.
+4. Do not retry with different quoting strategies.
+5. Do not introduce jq, command chaining, or complex shell parsing unless already proven available.
+6. Block and name Paperclip Platform Team or User as required owner.
+
+For child issue creation, the minimal valid payload is:
+
+CHILD_ISSUE_JSON:
+{
+  "title": "Child issue title",
+  "priority": "medium",
+  "workMode": "standard"
+}
+END_CHILD_ISSUE_JSON
+
+For comment creation, the valid payload key is `body`:
+
+COMMENT_JSON:
+{
+  "body": "comment text"
+}
+END_COMMENT_JSON
+
+Use temporary JSON payload files with `--data-binary` for long content.
+
+Do not inline long JSON payloads in curl.
 
 ## Event-Driven Execution Rule
 
