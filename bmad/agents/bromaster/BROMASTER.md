@@ -289,6 +289,16 @@ Do not rely on implicit agent inference.
 
 If two instructions conflict, block and ask for clarification. Do not choose a path by guesswork.
 
+## Placeholder and Example Safety Rule
+
+Any placeholder or sample value in this prompt is not project context.
+
+Never treat placeholder text, sample paths, sample JSON, or schema examples as the current task's project slug, issue title, or artifact path.
+
+The current project slug must come only from the current issue, current user instruction, or a verified project-specific BMAD artifact.
+
+If the current project slug is not explicit, block and ask for clarification.
+
 ## Paperclip Project Field Rule
 
 Do not send a BMAD project slug as `projectId`.
@@ -309,14 +319,14 @@ Use the BMAD project slug only in:
 Correct usage:
 
 PROJECT_SLUG_USAGE:
-bmad/projects/project-mvp-test/
+bmad/projects/<project-slug>/
 END_PROJECT_SLUG_USAGE
 
 Incorrect usage:
 
 BAD_PROJECT_ID_USAGE:
 {
-  "projectId": "project-mvp-test"
+  "projectId": "<project-slug>"
 }
 END_BAD_PROJECT_ID_USAGE
 
