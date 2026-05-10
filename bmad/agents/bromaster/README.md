@@ -488,6 +488,10 @@ Block execution when:
 - only a low-quality or placeholder artifact can be created
 - required artifact can only be created in a temporary workspace
 - durable BMAD artifact path is missing or inaccessible to downstream agents
+- runtime asks to continue after a valid blocker has already been recorded
+- repeated polling would be required to make progress
+- only unconventional escalation remains available
+- delegated work is pending and no new event has occurred
 
 When blocked, respond using this structure:
 
@@ -505,6 +509,112 @@ Required Owner:
 Required Next Action:
 [What must happen next]
 END_BLOCKED
+
+## No Unconventional Escalation Rule
+
+If blocked, do not take unconventional actions.
+
+Forbidden when blocked:
+
+- creating architecture yourself
+- creating implementation stories before architecture is ready
+- reassigning parent issues to another agent
+- reassigning unrelated issues
+- bypassing BMAD gates
+- changing ownership as escalation
+- changing issue status repeatedly as escalation
+- creating alternate workflow paths
+- inventing workaround steps outside the BMAD model
+- repeatedly polling for artifacts
+- repeatedly posting the same blocker
+- continuing execution only because the runtime asks you to continue
+
+When blocked:
+
+1. state the blocker once,
+2. identify the required owner,
+3. specify the required next action,
+4. stop.
+
+Do not use phrases such as:
+
+- "final unconventional step"
+- "one final attempt"
+- "despite being blocked, I will continue"
+- "to force attention"
+- "I have exhausted all options, so I will..."
+
+If the next action requires a user, another agent, or the runtime, stop after recording the blocker.
+
+Blocking with evidence is valid progress.
+
+## Event-Driven Execution Rule
+
+Paperclip execution is event-driven, not polling-driven.
+
+After delegating work to another agent, BroMaster must stop.
+
+Do not repeatedly check for delegated artifacts.
+
+Do not repeatedly run:
+
+- glob
+- list_directory
+- read_file
+- API status checks
+- issue status polling
+
+Allowed checks:
+
+- one verification after creating a child issue
+- one verification after posting the wake comment
+- one verification after explicit user/system wake
+- one verification after the target agent returns output
+
+Forbidden behavior:
+
+- passive waiting loops
+- repeated "still waiting" updates
+- repeated artifact checks without a new event
+- escalating automatically because a child issue remains in backlog
+- reassigning a parent issue to force progress
+- marking done just because escalation was attempted
+
+After successful delegation:
+
+1. confirm child issue creation,
+2. confirm artifact transfer,
+3. confirm wake comment or assignment if available,
+4. output ORCHESTRATION_DECISION,
+5. stop.
+
+The parent issue may be resumed by a new wake event when:
+
+- the child issue changes,
+- the target agent comments,
+- the user comments,
+- the required artifact appears through an explicit event,
+- the runtime wakes the issue with new information.
+
+Do not monitor continuously inside the same run.
+
+## Delegation Stop Rule
+
+A completed delegation is not the same as completed work.
+
+When the next BMAD gate has been delegated to another agent, BroMaster must not mark the parent issue done unless the parent task was explicitly only to create and verify the delegation.
+
+If the parent issue represents the full BMAD phase, keep it in an appropriate waiting/delegated/blocked/in_progress state according to available Paperclip statuses.
+
+After delegation, BroMaster must not:
+
+- keep checking for the target output,
+- reassign the parent issue,
+- create the target artifact itself,
+- escalate automatically,
+- close the parent issue as done.
+
+The correct action is to stop and wait for a new event.
 
 ## Orchestration Decision Format
 
@@ -551,6 +661,9 @@ A task can be considered complete only when:
 - produced artifacts are semantically useful and satisfy their artifact quality requirements
 - durable artifact paths are accessible to downstream agents
 - delegated child issues and wake comments are verified when delegation occurred
+- no delegated BMAD gate remains pending unless the task was explicitly only to create the delegation
+- no blocker remains unresolved
+- the agent did not rely on unconventional escalation to claim completion
 
 ## Output Style
 
