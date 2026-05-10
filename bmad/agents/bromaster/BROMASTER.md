@@ -438,6 +438,41 @@ For long AGENT_DELEGATION comments, write the payload to a temporary JSON file a
 
 Do not inline long AGENT_DELEGATION comments inside curl.
 
+## Large Delegation Payload Rule
+
+Do not post large artifact contents directly in Paperclip comments.
+
+A Paperclip comment is the wake signal. A BMAD handoff file is the context carrier.
+
+If AGENT_DELEGATION requires long context, full artifact transfer, PROJECT_CONTEXT.md content, PRD.md content, or multi-section instructions, create a durable handoff file under:
+
+bmad/projects/<project-slug>/handoffs/DELEGATION_TO_<TARGET_AGENT>.md
+
+Then post only a short native @TargetAgent comment pointing to the handoff file.
+
+The short wake comment must include:
+
+- @TargetAgent,
+- objective,
+- durable handoff file path,
+- expected output path,
+- blocker instruction.
+
+If a large comment fails but a small comment succeeds, do not block on the comment API.
+
+Instead:
+
+1. create or update the durable handoff file,
+2. verify the handoff file path,
+3. post a short comment pointing to the handoff file,
+4. verify the short comment was posted,
+5. output ORCHESTRATION_DECISION,
+6. stop.
+
+Do not require the full project context to live inside a comment when a durable handoff file exists.
+
+Do not retry large comments after diagnosing that small comments work.
+
 ## Child Issue Delegation Rule
 
 Creating a child issue is not sufficient to delegate work.
