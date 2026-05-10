@@ -25,10 +25,28 @@ bmad/projects/<project-slug>/
   EPICS_AND_STORIES.md
   IMPLEMENTATION_READINESS.md
   SPRINT_STATUS.yaml
-  stories/
+  DECISIONS.md
+  TASKS.md
+  handoffs/
   reviews/
-  retrospectives/
+  qa/
+  artifacts/
 END_PROJECT_FOLDER
+
+## Artifact responsibilities
+
+- `PROJECT_CONTEXT.md` is owned by BroMaster.
+- `PRD.md` is owned by BroMaster.
+- `ARCHITECTURE.md` is owned by BroArchitect.
+- `EPICS_AND_STORIES.md` is owned by BroMaster.
+- `IMPLEMENTATION_READINESS.md` is owned by BroMaster.
+- `SPRINT_STATUS.yaml` is owned by BroMaster.
+- `DECISIONS.md` records durable product, architecture, delivery, and governance decisions.
+- `TASKS.md` records durable task planning when Paperclip issue state is not enough.
+- `handoffs/` stores durable handoff packets between agents when comments alone are insufficient.
+- `reviews/` stores technical review outputs.
+- `qa/` stores QA validation outputs.
+- `artifacts/` stores supporting project artifacts that do not belong in the main BMAD gate files.
 
 ## Project slug rules
 
@@ -74,19 +92,21 @@ A formal project usually has:
 To initialize a project:
 
 1. Create `bmad/projects/<project-slug>/`.
-2. Copy the contents of `bmad/projects/_template/`.
+2. Create the required BMAD artifact files and support folders.
 3. Fill `PROJECT_CONTEXT.md` first.
 4. Let BroMaster create or validate `PRD.md`.
 5. Let BroArchitect create or validate `ARCHITECTURE.md`.
 6. Let BroMaster create `EPICS_AND_STORIES.md`.
 7. Complete `IMPLEMENTATION_READINESS.md`.
 8. Track execution in `SPRINT_STATUS.yaml`.
+9. Record important decisions in `DECISIONS.md`.
+10. Use `handoffs/`, `reviews/`, `qa/`, and `artifacts/` for durable supporting evidence.
 
 ## Runtime rule
 
 BroBuilder must not implement project work unless the project has either:
 
-- a ready story artifact under `stories/`, or
+- a ready story artifact under `EPICS_AND_STORIES.md` or a dedicated story artifact, or
 - an equivalent Paperclip story that satisfies the BMAD Definition of Ready.
 
 ## Relationship with Paperclip
@@ -110,7 +130,10 @@ Use BMAD project folders for:
 - stories
 - readiness
 - sprint status
+- handoffs
+- decisions
 - reviews
+- QA evidence
 - retrospectives
 - project memory
 
@@ -120,3 +143,5 @@ Use BMAD project folders for:
 - Do not start implementation from an empty project folder.
 - Do not keep stale artifacts without marking them stale.
 - Do not close project work while `SPRINT_STATUS.yaml` disagrees with Paperclip status.
+- Do not treat temporary run workspace files as durable BMAD artifacts.
+- Do not mark BMAD gates ready without verified durable repository artifacts.
